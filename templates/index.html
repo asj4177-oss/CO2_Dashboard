@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Carbon Analytics | 온실가스 배출량 분석</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div class="brand">CARBON <span>ANALYTICS</span></div>
+        <p>세계 온실가스 배출량 데이터 분석</p>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="intro">
+
+        <span class="eyebrow">ENVIRONMENTAL DATA DASHBOARD</span>
+
+        <h1>
+            탄소 배출량을<br>
+            <span>한눈에 살펴보다</span>
+        </h1>
+
+        <p>
+            전 세계 탄소 배출 데이터를 바탕으로<br>
+            기후 변화의 흐름과 국가별 배출 특성을 분석합니다.
+        </p>
+
+        <div class="intro-tags">
+            <span>GLOBAL TREND</span>
+            <span>COUNTRY COMPARISON</span>
+            <span>EMISSION ANALYSIS</span>
+        </div>
+
+    </section>
+
+    <!-- 분석 목차 -->
+    <nav class="chart-nav">
+        <span class="nav-title">ANALYSIS MENU</span>
+
+        <a href="#global">세계 배출량</a>
+        <a href="#country">국가별 비교</a>
+        <a href="#energy">에너지 구성</a>
+        <a href="#economy">경제와 배출량</a>
+        <a href="#change">배출량 변화</a>
+        <a href="#structure">배출 구조 분석</a>
+    </nav>
+
+
+<div class="kpi-container">
+
+    <!-- 세계 CO2 배출량 -->
+    <div class="kpi-card">
+        <h3>세계 CO₂ 배출량</h3>
+        <p>{{ "%.2f"|format(world_co2) }} Gt</p>
+        <span>{{ latest_year }}년 기준</span>
+    </div>
+
+    <!-- 세계 1인당 배출량 -->
+    <div class="kpi-card">
+        <h3>세계 1인당 배출량</h3>
+        <p>{{ "%.2f"|format(world_per_capita) }} t</p>
+        <span>1인당 배출량</span>
+    </div>
+
+    <!-- 배출 증가율 -->
+    <div class="kpi-card">
+        <h3>CO₂ 배출 증가율</h3>
+
+        {% if growth_rate is not none %}
+            <p>
+                {% if growth_rate > 0 %}+{% endif %}
+                {{ "%.2f"|format(growth_rate) }}%
+            </p>
+        {% else %}
+            <p>데이터 없음</p>
+        {% endif %}
+
+        <span>전년 대비 변화</span>
+    </div>
+
+    <!-- 누적 배출량 -->
+    <div class="kpi-card">
+        <h3>누적 CO₂ 배출량</h3>
+
+        {% if cumulative_co2 is not none %}
+            <p>{{ "%.2f"|format(cumulative_co2) }} Tt</p>
+        {% else %}
+            <p>데이터 없음</p>
+        {% endif %}
+
+        <span>역사적 누적 배출</span>
+    </div>
+
+</div>
+
+
+    <!-- 01 세계 배출량 -->
+    <section class="section" id="global">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">01 / GLOBAL TREND</span>
+                <h2>세계 배출량</h2>
+            </div>
+
+            <p>세계 탄소 배출량의 변화</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "01_world_trend.png",
+                "title": "세계 탄소 배출량 추이",
+                "desc": "세계 연간 탄소 배출량의 장기적인 변화 추이를 보여줍니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 02 국가별 비교 -->
+    <section class="section" id="country">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">02 / COUNTRY COMPARISON</span>
+                <h2>국가별 비교</h2>
+            </div>
+
+            <p>국가별 배출량과 1인당 배출량</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "02_top10_bar.png",
+                "title": "탄소 배출량 상위 10개국",
+                "desc": "탄소 배출량이 높은 주요 국가들의 배출 규모를 비교합니다."
+            },
+            {
+                "file": "02_per_capita.png",
+                "title": "국가별 1인당 탄소 배출량",
+                "desc": "국가별 인구 규모를 고려한 1인당 탄소 배출량을 비교합니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 03 에너지 구성 -->
+    <section class="section" id="energy">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">03 / ENERGY MIX</span>
+                <h2>에너지 구성</h2>
+            </div>
+
+            <p>세계 및 주요 국가의 에너지 구성</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "03_energy_World.png",
+                "title": "세계 에너지 구성",
+                "desc": "세계 에너지 구성의 비중을 확인할 수 있습니다."
+            },
+            {
+                "file": "03_energy_China.png",
+                "title": "중국 에너지 구성",
+                "desc": "중국의 에너지 구성 비율을 시각적으로 비교합니다."
+            },
+            {
+                "file": "03_energy_United_States.png",
+                "title": "미국 에너지 구성",
+                "desc": "미국의 에너지 구성 비율을 시각적으로 비교합니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 04 경제와 배출량 -->
+    <section class="section" id="economy">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">04 / ECONOMY</span>
+                <h2>경제와 배출량</h2>
+            </div>
+
+            <p>경제 지표와 탄소 배출량의 관계</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "04_gdp_scatter.png",
+                "title": "GDP와 탄소 배출량",
+                "desc": "GDP와 탄소 배출량 사이의 관계를 산점도로 살펴봅니다."
+            },
+            {
+                "file": "06_income_boxplot.png",
+                "title": "소득 그룹별 탄소 배출량",
+                "desc": "소득 그룹에 따른 탄소 배출량 분포를 비교합니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 05 배출량 변화 -->
+    <section class="section" id="change">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">05 / EMISSION CHANGE</span>
+                <h2>배출량 변화</h2>
+            </div>
+
+            <p>배출량의 성장과 누적 변화</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "07_growth_index_relplot.png",
+                "title": "탄소 배출량 성장 지수",
+                "desc": "기준 연도 대비 탄소 배출량의 상대적인 변화를 확인합니다."
+            },
+            {
+                "file": "07_per_capita_relplot.png",
+                "title": "국가별 1인당 배출량 추이",
+                "desc": "국가별 1인당 탄소 배출량의 시간적 변화를 비교합니다."
+            },
+            {
+                "file": "06_cumulative_top5.png",
+                "title": "누적 배출량 상위 5개국",
+                "desc": "누적 탄소 배출량 기준 상위 국가들의 비중을 비교합니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 06 배출 구조 분석 -->
+    <section class="section" id="structure">
+
+        <div class="section-title">
+            <div>
+                <span class="section-label">06 / STRUCTURE ANALYSIS</span>
+                <h2>배출 구조 분석</h2>
+            </div>
+
+            <p>배출량의 구조와 변수 간 관계</p>
+        </div>
+
+        {% set charts = [
+            {
+                "file": "09_production_vs_consumption.png",
+                "title": "생산 기준과 소비 기준 배출량",
+                "desc": "생산 기준 배출량과 소비 기준 배출량의 차이를 비교합니다."
+            },
+            {
+                "file": "10_corr_heatmap.png",
+                "title": "변수 간 상관관계",
+                "desc": "여러 변수 사이의 상관관계를 색상으로 표현한 그래프입니다."
+            }
+        ] %}
+
+        {% for chart in charts %}
+        <div class="chart-card">
+
+            <h3>{{ chart.title }}</h3>
+
+            <img
+                class="chart-image"
+                src="{{ url_for('static', filename='figs/' + chart.file) }}"
+                alt="{{ chart.title }}"
+            >
+
+            <button class="zoom-button" type="button"
+                    onclick="openZoom(this)">
+                그래프 확대
+            </button>
+
+            <details class="chart-description">
+                <summary>그래프 설명 보기</summary>
+                <p>{{ chart.desc }}</p>
+            </details>
+
+        </div>
+        {% endfor %}
+
+    </section>
+
+
+    <!-- 그래프 확대 화면 -->
+    <div id="zoom-modal" class="zoom-modal">
+
+        <button class="zoom-close" type="button"
+                onclick="closeZoom()">
+            &times;
+        </button>
+
+        <img id="zoom-image" src="" alt="확대된 그래프">
+
+    </div>
+
+
+    <!-- 하단 -->
+    <footer class="footer">
+        <p>CARBON ANALYTICS</p>
+        <span>CO₂ Emissions Visualization Project</span>
+    </footer>
+
+</main>
+
+
+<!-- 그래프 확대 기능 -->
+<script>
+
+    function openZoom(button) {
+
+        const chart = button.parentElement.querySelector(".chart-image");
+
+        const modal = document.getElementById("zoom-modal");
+
+        const zoomImage = document.getElementById("zoom-image");
+
+        zoomImage.src = chart.src;
+
+        zoomImage.alt = chart.alt;
+
+        modal.style.display = "flex";
+    }
+
+
+    function closeZoom() {
+
+        document.getElementById("zoom-modal").style.display = "none";
+
+    }
+
+
+    // 확대 화면 바깥쪽 클릭 시 닫기
+    document.getElementById("zoom-modal").addEventListener("click", function(event) {
+
+        if (event.target === this) {
+
+            closeZoom();
+
+        }
+
+    });
+
+
+    // ESC 키로 확대 화면 닫기
+    document.addEventListener("keydown", function(event) {
+
+        if (event.key === "Escape") {
+
+            closeZoom();
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
